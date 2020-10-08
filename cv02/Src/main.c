@@ -24,6 +24,8 @@ static volatile uint32_t Tick;	//definovani promene Tick
 #define LED_TIME_BLINK 			300  //promenna preprocesoru
 #define BUTTON_DEBOUNCE 		40	//doba starajici se o odstranení zakmitu
 #define LED_TIME_SHORT 			100	//doba po kterou ma ledka svitit
+#define LED_TIME_LONG 			1000
+#define BUTTON_DEBOUNCE_SHORT 	5
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -57,6 +59,7 @@ void blikac(void)					// void nevraci zadnou hodnotu ani parametry
 void tlacitka(void)
 {
 	static uint32_t debounce1;
+	static uint32_t debounce2;
 	static uint32_t off_time;
 
 	if (Tick > debounce1 + BUTTON_DEBOUNCE)
@@ -79,9 +82,22 @@ void tlacitka(void)
 		old_s2 = new_s2;
 	}
 
+	if(Tick > debounce2 + BUTTON_DEBOUNCE_SHORT) 	//perioda 5ms
+		{
+			static uint16_t debounce = 0xFFFF;
+
+			debounce <<= 1;
+			if(GPIOC->IDR & (1<<1)) debounce |= 0x0001;
+
+			if(debounce == 0x8000)
+			{
+				off_time = Tick + LED_TIME_LONG;
+				GPIOB->BSRR = (1<<0);				// zapnuti ledky
+			}
+
 	if (Tick > off_time)							//casovac pro vypnuti LED
 	{
-		GPIOB->BRR = (1<<0);
+		GPIOB->BRR = (1<<0);						// vypnuti ledky
 	}
 }
 
