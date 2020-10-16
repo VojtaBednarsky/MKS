@@ -101,8 +101,7 @@ void tlacitka(void)
 	}
 }
 
-int main(void)
-{
+int main(void){
 	RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOCEN; // enable
 	GPIOA->MODER |= GPIO_MODER_MODER4_0; // LED1 = PA4, output   //nadefinovani registru
 	GPIOB->MODER |= GPIO_MODER_MODER0_0; // LED2 = PB0, output
@@ -122,6 +121,5 @@ int main(void)
 	for(;;){
 		blikac();
 		tlacitka();
-		}
-		;
+		};
 }

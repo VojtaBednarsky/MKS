@@ -161,7 +161,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="cv01.null.1991650586" name="cv01"/>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
@@ -171,5 +170,17 @@
 		<scannerConfigBuildInfo instanceId="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.660832573;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.660832573.;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1537482842;com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1821461981">
 			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+		<buildTargets>
+			<target name="2.2 Driver pro posuvný registr" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>2.2 Driver pro posuvný registr</buildCommand>
+				<buildArguments>-j4</buildArguments>
+				<buildTarget/>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+		</buildTargets>
 	</storageModule>
 </cproject>
