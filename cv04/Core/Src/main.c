@@ -34,6 +34,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define ADC_Q 14  //vyraznejsi je 14ctka
+/* Temperature sensor calibration value address */
+#define TEMP110_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7C2))  ///precteni hodnoty v pametove bunce
+#define TEMP30_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7B8))
+/* Internal voltage reference calibration value address */
+#define VREFINT_CAL_ADDR ((uint16_t*) ((uint32_t) 0x1FFFF7BA))
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,8 +52,9 @@ ADC_HandleTypeDef hadc;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
 static volatile uint32_t raw_pot;
+static volatile uint32_t raw_temp;
+static volatile uint32_t raw_volt;
 
 /* USER CODE END PV */
 
@@ -64,13 +70,25 @@ static void MX_ADC_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)  //rozlisovat, ktery kanal se prevedl
 {
-	static uint32_t avg_pot;
+	static uint8_t channel = 0;  // pokud se jedna o kanal nula tak se provede ten puvodni kod
+	if(channel == 0){
+		static uint32_t avg_pot;
+		raw_pot = avg_pot >> ADC_Q;  //rawpot dispaly old value
+		avg_pot -= raw_pot;
+		avg_pot += HAL_ADC_GetValue(hadc); //add actual new value
+	}
+	else if (channel == 1){  //kanal je roven 1, tak se bude ukladat teplota
+			raw_temp = HAL_ADC_GetValue(hadc);
+		}
 
-	raw_pot = avg_pot >> ADC_Q;  //rawpot dispaly old value
-	avg_pot -= raw_pot;
-	avg_pot += HAL_ADC_GetValue(hadc); //add actual new value
+		else if (channel == 2){  //je roven kanal 2, tak uloz napeti
+				raw_volt = HAL_ADC_GetValue(hadc);
+			}
+
+		if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS)) channel = 0;		//nastaveni dobehu kanalu
+		else channel++;
 }
 
 /* USER CODE END 0 */
@@ -121,10 +139,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  static enum { SHOW_POT, SHOW_VOLT, SHOW_TEMP } state = SHOW_POT;  //stavovy automat, stara se reakce na tlacitka s1 as2 nabyva hodnot pot volt a temp
+	 	  static uint32_t delay;
+	 	 if(state == SHOW_POT) {  //zobrazuje trimr
+	 	  sct_value(raw_pot * 500/4096, raw_pot * 9 / 4096);
+	 	 }
 
-	  sct_value(raw_pot * 500 / 4096, raw_pot * 9 / 4096);
-	  HAL_Delay(50);
+	 	 	 else if(state == SHOW_TEMP) {  //zobrazuje teplotu
+				 int32_t temperature = (raw_temp - (int32_t)(*TEMP30_CAL_ADDR));
+				 temperature = temperature * (int32_t)(110 - 30);
+				 temperature = temperature / (int32_t)(*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);  //definice pametovych mist
+				 temperature = temperature + 30;
 
+				 sct_value(temperature, raw_pot * 9 / 4096);  //zobrazujeme teplotu
+	 			 }
+
+	 	 	 else if (state == SHOW_VOLT){  //zobrazeni hodnoty napeti
+	 			 uint32_t voltage = 330 * (*VREFINT_CAL_ADDR) / raw_volt;
+	 			 sct_value(voltage, raw_pot * 9 / 4096);  //zobrazeni na displeji napeti
+	 		 	 }
+
+	 		  if(HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) == 0){
+	 			  state = SHOW_VOLT;
+	 			  delay = HAL_GetTick();
+	 		  }
+
+	 		  if(HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) == 0){
+	 			  state = SHOW_TEMP;
+	 			  delay = HAL_GetTick();
+	 		  }
+
+	 		 if(HAL_GetTick() > delay + 1000){  //vraceni SA do puvodniho stavu
+	 			 state = SHOW_POT;
+	 		 }
   }
   /* USER CODE END 3 */
 }
@@ -214,6 +261,20 @@ static void MX_ADC_Init(void)
   {
     Error_Handler();
   }
+  /** Configure for the selected ADC regular channel to be converted.
+  */
+  sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel to be converted.
+  */
+  sConfig.Channel = ADC_CHANNEL_VREFINT;
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC_Init 2 */
 
   /* USER CODE END ADC_Init 2 */
@@ -281,6 +342,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : S2_Pin S1_Pin */
+  GPIO_InitStruct.Pin = S2_Pin|S1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
