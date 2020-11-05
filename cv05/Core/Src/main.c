@@ -22,10 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 #include <stdio.h>
 #include <string.h>
-
 
 /* USER CODE END Includes */
 
@@ -44,18 +42,19 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
 /* USER CODE BEGIN PV */
 
+#define EEPROM_ADDR 0xA0
 #define CMD_BUFFER_LEN 64
 #define RX_BUFFER_LEN 64  //delka buferu definice 64 bajtu
 static uint8_t uart_rx_buf[RX_BUFFER_LEN]; //definice samorneho bafru
 static volatile uint16_t uart_rx_read_ptr = 0;
 #define uart_rx_write_ptr (RX_BUFFER_LEN - hdma_usart2_rx.Instance->CNDTR)  //definice pointru
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,6 +62,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 int _write(int file, char const *buf, int n)
@@ -101,19 +101,93 @@ static void uart_process_command(char *cmd)
 					printf("OK\n");
 				}
 			else if (strcasecmp(token, "STATUS") == 0)
-			{
-				if (HAL_GPIO_ReadPin(LED1_GPIO_Port, LED1_Pin)) printf("LED1 ON; ");
-				else printf("LED1 OFF; ");
+				{
+					if (HAL_GPIO_ReadPin(LED1_GPIO_Port, LED1_Pin)) printf("LED1 ON; ");
+					else printf("LED1 OFF; ");
 
-				if (HAL_GPIO_ReadPin(LED2_GPIO_Port, LED2_Pin)) printf("LED2 ON\n");
-				else printf("LED2 OFF\n");
-			}
+					if (HAL_GPIO_ReadPin(LED2_GPIO_Port, LED2_Pin)) printf("LED2 ON\n");
+					else printf("LED2 OFF\n");
+				}
+				else if (strcasecmp(token, "READ") == 0)  //vytvoreni dalsiho podprikazu
+				{
+					token = strtok(NULL, " ");
+					uint16_t addr = atoi(token);  //prevod retezce na intiger
+					uint8_t value;  //prevod do 8bit value
 
-			else
-			{
-				printf("Neplatny prikaz\n");
-	}
-}
+					HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, addr, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);  //cteni
+
+					printf("Adresa 0x%04X = 0x%02X\n", addr, value);  //vypsani hodnoty do terminalu, predavame dva parametry
+				}
+				else if (strcasecmp(token, "WRITE") == 0)
+					{
+						token = strtok(NULL, " ");
+						uint16_t addr = atoi(token);
+						token = strtok(NULL, " ");
+						uint8_t value = atoi(token);
+
+						HAL_I2C_Mem_Write(&hi2c1, EEPROM_ADDR, addr, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000); //zapis
+						while (HAL_I2C_IsDeviceReady(&hi2c1, EEPROM_ADDR, 300, 1000) == HAL_TIMEOUT) {}
+
+						printf("WRITE OK\n");
+					}
+					else if (strcasecmp(token, "DUMP") == 0)
+					{
+					/*	uint8_t value0;   //zbytecne slozity zapis
+						uint8_t value1;
+						uint8_t value2;
+						uint8_t value3;
+						uint8_t value4;
+						uint8_t value5;
+						uint8_t value6;
+						uint8_t value7;
+						uint8_t value8;
+						uint8_t value9;
+						uint8_t valueA;
+						uint8_t valueB;
+						uint8_t valueC;
+						uint8_t valueD;
+						uint8_t valueE;
+						uint8_t valueF;
+
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0000, I2C_MEMADD_SIZE_16BIT, &value0, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0001, I2C_MEMADD_SIZE_16BIT, &value1, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0002, I2C_MEMADD_SIZE_16BIT, &value2, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0003, I2C_MEMADD_SIZE_16BIT, &value3, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0004, I2C_MEMADD_SIZE_16BIT, &value4, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0005, I2C_MEMADD_SIZE_16BIT, &value5, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0006, I2C_MEMADD_SIZE_16BIT, &value6, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0007, I2C_MEMADD_SIZE_16BIT, &value7, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0008, I2C_MEMADD_SIZE_16BIT, &value8, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x0009, I2C_MEMADD_SIZE_16BIT, &value9, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000A, I2C_MEMADD_SIZE_16BIT, &valueA, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000B, I2C_MEMADD_SIZE_16BIT, &valueB, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000C, I2C_MEMADD_SIZE_16BIT, &valueC, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000D, I2C_MEMADD_SIZE_16BIT, &valueD, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000E, I2C_MEMADD_SIZE_16BIT, &valueE, 1, 1000);
+									HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, 0x000F, I2C_MEMADD_SIZE_16BIT, &valueF, 1, 1000);
+
+						printf("0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n", value0, value1, value2, value3, value4, value5, value6, value7);
+						printf("0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n", value8, value9, valueA, valueB, valueC, valueD, valueE, valueF);
+					*/
+
+						uint16_t addr;
+						uint8_t value;
+
+							for (addr = 0; addr < 16; addr++) {
+								if (addr == 8){
+									printf("\n");
+								}
+								HAL_I2C_Mem_Read(&hi2c1, EEPROM_ADDR, addr, I2C_MEMADD_SIZE_16BIT, &value, 1, 1000);
+								printf("%02X ", value);
+							}
+							printf("\n");
+					}
+
+					else
+					{
+						printf("Neplatny prikaz\n");
+					}
+				}
 
 static void uart_byte_available(uint8_t c)
 {
@@ -166,6 +240,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
     HAL_UART_Receive_DMA(&huart2, uart_rx_buf, RX_BUFFER_LEN);  //aktivace cteni z uartu
@@ -197,6 +272,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -224,6 +300,58 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x2000090E;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
