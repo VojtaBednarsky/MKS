@@ -35,6 +35,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 /* USER CODE END PD */
+#define c_delay	750
+#define b_delay 40
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -128,9 +130,10 @@ static const int16_t ntc_lookup[] = { 1689, 1669, 1649, 1630, 1611, 1593, 1575,
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_ADC_Init(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_ADC_Init(void);
+
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -156,6 +159,13 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  static enum { VAL2, VAL1, BUTTON, CON, FIN } state = CON;
+  static uint32_t delay_display;
+  static uint32_t delay_conversion;
+  static uint32_t delay_button;
+  static int16_t temp_18b20;
+  static uint8_t flagVALUE = 0;
+  static uint16_t ntc_value;
 
   /* USER CODE END Init */
 
@@ -171,10 +181,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC_Init();
   /* USER CODE BEGIN 2 */
-  sct_init();
-  OWInit();
-  HAL_ADCEx_Calibration_Start(&hadc);
-  HAL_ADC_Start(&hadc);
+   sct_init();
+   OWInit();
+   HAL_ADC_Start(&hadc);
+   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);  //NTC LED1
+   HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);  //LED2
+   HAL_ADCEx_Calibration_Start(&hadc);
 
   /* USER CODE END 2 */
 
@@ -193,11 +205,67 @@ int main(void)
 	  OWReadTemperature(&temp_18b20);	//read temperature
 
 	  sct_value(temp_18b20 / 10);  //display value for only positiv values
-*/
-	  sct_value(ntc_lookup[HAL_ADC_GetValue(&hadc)]);  // index to tab from hadc
-	  HAL_Delay(500);  //delay
 
-  }
+	  sct_value(ntc_lookup[HAL_ADC_GetValue(&hadc)]);  // index to tab from hadc and display
+	  HAL_Delay(500);  //delay
+*/
+	  switch (state) {
+	  		case CON:  //covert
+	  			OWConvertAll();
+	  			delay_conversion = HAL_GetTick();
+	  			state = FIN;
+	  			break;
+
+	  		case BUTTON:  //get current state of buttons
+	  			delay_button = HAL_GetTick();
+	  			state = FIN;
+	  			if (HAL_GPIO_ReadPin(S1_GPIO_Port, S1_Pin) == 0) {  //LED2
+	  				HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
+	  				HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 1);
+	  				flagVALUE = 1;
+	  				state = VAL2;
+	  			}
+	  			else if (HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) == 0) {	  //LED1
+	  				HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);
+	  				HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);
+	  				flagVALUE = 0;
+	  				state = VAL2;
+	  			}
+	  			break;
+
+	  		case VAL1:  //get values from DS18B20 and NTC
+	  			OWReadTemperature(&temp_18b20);
+	  			ntc_value = ntc_lookup[HAL_ADC_GetValue(&hadc)];
+	  			state = CON;
+	  			break;
+
+	  		case VAL2:  //push value to diplay
+	  			delay_display = HAL_GetTick();
+	  			if (flagVALUE == 0) {  //NTC temp
+	  				sct_value(ntc_value);
+	  			}
+	  			else if (flagVALUE == 1) {  //DS18B20 temp
+	  				sct_value(temp_18b20 / 10);
+	  			}
+	  			state = FIN;
+	  			break;
+
+	  		case FIN:
+	  			if (HAL_GetTick() > delay_conversion + CONVERT_T_DELAY)	{  //final case
+	  				state = VAL1;
+	  			}
+	  			else if (HAL_GetTick() > delay_display + c_delay) {  //refresh
+	  				state = VAL2;
+	  			}
+	  			else if (HAL_GetTick() > delay_button + b_delay) {  //state button
+	  				state = BUTTON;
+	  			}
+	  			break;
+
+	  		default:
+	  			break;
+	  	}
+}
   /* USER CODE END 3 */
 }
 
@@ -205,8 +273,7 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -229,13 +296,12 @@ void SystemClock_Config(void)
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
+                                |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-  {
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
     Error_Handler();
   }
 }
@@ -245,8 +311,7 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-static void MX_ADC_Init(void)
-{
+static void MX_ADC_Init(void) {
 
   /* USER CODE BEGIN ADC_Init 0 */
 
@@ -273,8 +338,7 @@ static void MX_ADC_Init(void)
   hadc.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc.Init.DMAContinuousRequests = DISABLE;
   hadc.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
-  if (HAL_ADC_Init(&hadc) != HAL_OK)
-  {
+  if (HAL_ADC_Init(&hadc) != HAL_OK) {
     Error_Handler();
   }
   /** Configure for the selected ADC regular channel to be converted.
@@ -282,8 +346,7 @@ static void MX_ADC_Init(void)
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_RANK_CHANNEL_NUMBER;
   sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
+  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE BEGIN ADC_Init 2 */
@@ -297,8 +360,7 @@ static void MX_ADC_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USART2_UART_Init(void)
-{
+static void MX_USART2_UART_Init(void) {
 
   /* USER CODE BEGIN USART2_Init 0 */
 
@@ -386,7 +448,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DQ_GPIO_Port, &GPIO_InitStruct);
-
 }
 
 /* USER CODE BEGIN 4 */
