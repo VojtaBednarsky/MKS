@@ -149,32 +149,30 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(key == code[0]) {
-		  timedown = HAL_GetTick();
-	  }
 
-	  if(key != -1) {
+	  if(key != -1) {  // jestlize je klavesa stisknuta
+		  timedown = HAL_GetTick();
 		  printf("stisknuto: %d\n", key);
 		  key = -1;
 
-		  if(key == code[pos]) {
+		  if(key == code[pos]) {  // jestlize je zadana cislice spravna
 			  pos++;
 			  printf("stisknuto: %d\n", key);
 			  key = -1;
 		  }
 		  else {
-			  printf("wrong code\n");
-			  pos = 0;
+			  printf("wrong code\n");  // spatna klavesa
+			  pos = 0;  //zpet na pozici 0
 			  key = -1;
 		  }
 	  }
 
-	  if(timedown > timedown+3000) {
+	  if(timedown > timedown+3000) {  //pretecení
 		  pos = 0;
 	  }
 
 	  if(pos > 4) {
-		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);  // kod zadan uspesne, rozviceni LED
 		  pos = 0;
 	  }
 
