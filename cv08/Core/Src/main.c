@@ -137,7 +137,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Base_Start_IT(&htim3);
-  printf("test\n");
+  printf("test\n");  //zkouska
+
+  const uint8_t code[] = {7, 9, 3, 2, 12}; //kod
+  uint8_t pos = 0;
+  uint32_t timedown = HAL_GetTick();
 
   /* USER CODE END 2 */
 
@@ -145,23 +149,47 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  /*
-	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  HAL_Delay(250);
-	  */
-
-	  if(key != -1)
-	  {
-		  printf("stisknuto: %d\n", key);
-		  key = -1;
+	  if(key == code[0]) {
+		  timedown = HAL_GetTick();
 	  }
 
-  }
+	  if(key != -1) {
+		  printf("stisknuto: %d\n", key);
+		  key = -1;
+
+		  if(key == code[pos]) {
+			  pos++;
+			  printf("stisknuto: %d\n", key);
+			  key = -1;
+		  }
+		  else {
+			  printf("wrong code\n");
+			  pos = 0;
+			  key = -1;
+		  }
+	  }
+
+	  if(timedown > timedown+3000) {
+		  pos = 0;
+	  }
+
+	  if(pos > 4) {
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		  pos = 0;
+	  }
+
+	  /*
+		  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+		  HAL_Delay(250);
+		  */
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+}
+
+  /* USER CODE END 3 */
+}
   /* USER CODE END 3 */
 }
 
