@@ -1,5 +1,7 @@
-main.c:70:5:main	16	static
-main.c:125:6:SystemClock_Config	88	static
-main.c:169:13:MX_USART3_UART_Init	8	static
-main.c:202:13:MX_GPIO_Init	56	static
-main.c:288:6:Error_Handler	4	static
+main.c:59:6:step	24	static
+main.c:75:6:monstrosity	40	static
+main.c:104:5:main	16	static
+main.c:160:6:SystemClock_Config	88	static
+main.c:204:13:MX_USART3_UART_Init	8	static
+main.c:237:13:MX_GPIO_Init	56	static
+main.c:323:6:Error_Handler	4	static

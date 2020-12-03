@@ -20,11 +20,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
-#include "usbd_hid.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_hid.h"
+#include <math.h>
+#include <stdbool.h>
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,38 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void step(int8_t x, int8_t y, bool  btn) {
+
+	uint8_t buff [4];
+
+	if(btn == 0) buff[0] = 0x00;
+	else buff[0] = 0x01;
+
+	buff[1] = (int8_t)(x);
+	buff[2] = (int8_t)(y);
+	buff[3] = 0;  // nevyuzije se
+	USBD_HID_SendReport(&hUsbDeviceFS, buff, sizeof(buff));
+	HAL_Delay(USBD_HID_GetPollingInterval(&hUsbDeviceFS));
+}
+
+
+
+void monstrosity(uint8_t radius) {  //vykresleni kruhu
+
+	for(uint16_t angle = 0; angle < 360; angle++) {
+
+		static int8_t x = 0;
+		static int8_t y = 0;
+		float sx = radius*sin(angle);
+		float sy = radius*cos(angle);
+
+		int8_t dx = x - sx;
+		int8_t dy = y - sy;
+		step(dx, dy, 1);
+		x = dx;
+		y = dy;
+	}
+}
 
 /* USER CODE END PFP */
 
@@ -93,6 +126,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART3_UART_Init();
   MX_USB_DEVICE_Init();
+
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
