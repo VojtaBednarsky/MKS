@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lwip/apps/httpd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -321,9 +321,15 @@ void StartDefaultTask(void const * argument)
   /* init code for LWIP */
   MX_LWIP_Init();
   /* USER CODE BEGIN 5 */
-  tcpecho_init();
 
-  telnet_init();
+  /* Initalize tcp echo server */
+    tcpecho_init();
+
+    /* Initalize telnet server */
+    telnet_init();
+
+    /* Initialize HTTP server */
+    httpd_init();
 
   /* Infinite loop */
   for(;;)
@@ -334,7 +340,7 @@ void StartDefaultTask(void const * argument)
 }
 
 /**
-  * @brief  Period elapsed callba	ck in non blocking mode
+  * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM14 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
   * a global variable "uwTick" used as application time base.
