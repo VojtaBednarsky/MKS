@@ -29,7 +29,7 @@ int main(void)
 {
 	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;		// zapnuti citani
 	GPIOA->MODER |= GPIO_MODER_MODER5_0;	//	nastaveni jako OUT
-
+	GPIOB->MODER |= GPIO_MODER_MODER1_0;
 
 	for(;;){
 		uint32_t pole = 0b10101001110111011100101010000000; //binarne SOS
@@ -37,6 +37,7 @@ int main(void)
 			if(pole & 0x80000000) GPIOA->BSRR = (1<<5);		//testuje se zda bit z morseovky je roven 1 pokud ano, tak se nastavi LED
 			else GPIOA->BRR = (1<<5);
 			pole <<=1;
+			GPIOB->BSRR = (1<<1);
 
 			for (volatile uint32_t i = 0; i < 100000; i++) {}	//cekani
 			}

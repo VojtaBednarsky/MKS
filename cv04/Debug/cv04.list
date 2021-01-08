@@ -651,26 +651,26 @@ int main(void)
  80004fe:	e04d      	b.n	800059c <main+0xfc>
 	 	 }
 
-	 	 else if(state == SHOW_TEMP) {  //zobrazuje teplotu
+	 	 	 else if(state == SHOW_TEMP) {  //zobrazuje teplotu
  8000500:	4b3e      	ldr	r3, [pc, #248]	; (80005fc <main+0x15c>)
  8000502:	781b      	ldrb	r3, [r3, #0]
  8000504:	2b02      	cmp	r3, #2
  8000506:	d127      	bne.n	8000558 <main+0xb8>
-	 			 int32_t temperature = (raw_temp - (int32_t)(*TEMP30_CAL_ADDR));
+				 int32_t temperature = (raw_temp - (int32_t)(*TEMP30_CAL_ADDR));
  8000508:	4b3e      	ldr	r3, [pc, #248]	; (8000604 <main+0x164>)
  800050a:	681b      	ldr	r3, [r3, #0]
  800050c:	4a3e      	ldr	r2, [pc, #248]	; (8000608 <main+0x168>)
  800050e:	8812      	ldrh	r2, [r2, #0]
  8000510:	1a9b      	subs	r3, r3, r2
  8000512:	603b      	str	r3, [r7, #0]
-	 			 temperature = temperature * (int32_t)(110 - 30);
+				 temperature = temperature * (int32_t)(110 - 30);
  8000514:	683a      	ldr	r2, [r7, #0]
  8000516:	0013      	movs	r3, r2
  8000518:	009b      	lsls	r3, r3, #2
  800051a:	189b      	adds	r3, r3, r2
  800051c:	011b      	lsls	r3, r3, #4
  800051e:	603b      	str	r3, [r7, #0]
-	 			 temperature = temperature / (int32_t)(*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);  //definice pametovych mist
+				 temperature = temperature / (int32_t)(*TEMP110_CAL_ADDR - *TEMP30_CAL_ADDR);  //definice pametovych mist
  8000520:	4b3a      	ldr	r3, [pc, #232]	; (800060c <main+0x16c>)
  8000522:	881b      	ldrh	r3, [r3, #0]
  8000524:	001a      	movs	r2, r3
@@ -682,12 +682,12 @@ int main(void)
  8000530:	f7ff fe74 	bl	800021c <__divsi3>
  8000534:	0003      	movs	r3, r0
  8000536:	603b      	str	r3, [r7, #0]
-	 			 temperature = temperature + 30;
+				 temperature = temperature + 30;
  8000538:	683b      	ldr	r3, [r7, #0]
  800053a:	331e      	adds	r3, #30
  800053c:	603b      	str	r3, [r7, #0]
 
-	 			  sct_value(temperature, raw_pot * 9 / 4096);  //zobrazujeme teplotu
+				 sct_value(temperature, raw_pot * 9 / 4096);  //zobrazujeme teplotu
  800053e:	683b      	ldr	r3, [r7, #0]
  8000540:	b298      	uxth	r0, r3
  8000542:	4b2f      	ldr	r3, [pc, #188]	; (8000600 <main+0x160>)
@@ -701,7 +701,8 @@ int main(void)
  8000552:	f000 fa57 	bl	8000a04 <sct_value>
  8000556:	e021      	b.n	800059c <main+0xfc>
 	 			 }
-	 	else if (state == SHOW_VOLT){  //zobrazeni hodnoty napeti
+
+	 	 	 else if (state == SHOW_VOLT){  //zobrazeni hodnoty napeti
  8000558:	4b28      	ldr	r3, [pc, #160]	; (80005fc <main+0x15c>)
  800055a:	781b      	ldrb	r3, [r3, #0]
  800055c:	2b01      	cmp	r3, #1
@@ -755,6 +756,7 @@ int main(void)
  80005b6:	4b19      	ldr	r3, [pc, #100]	; (800061c <main+0x17c>)
  80005b8:	601a      	str	r2, [r3, #0]
 	 		  }
+
 	 		  if(HAL_GPIO_ReadPin(S2_GPIO_Port, S2_Pin) == 0){
  80005ba:	4b17      	ldr	r3, [pc, #92]	; (8000618 <main+0x178>)
  80005bc:	2101      	movs	r1, #1
@@ -772,6 +774,7 @@ int main(void)
  80005d4:	4b11      	ldr	r3, [pc, #68]	; (800061c <main+0x17c>)
  80005d6:	601a      	str	r2, [r3, #0]
 	 		  }
+
 	 		 if(HAL_GetTick() > delay + 1000){  //vraceni SA do puvodniho stavu
  80005d8:	f000 fbdc 	bl	8000d94 <HAL_GetTick>
  80005dc:	0002      	movs	r2, r0

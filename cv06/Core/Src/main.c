@@ -50,7 +50,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-static const int16_t ntc_lookup[] = { 1689, 1669, 1649, 1630, 1611, 1593, 1575,
+static const int16_t ntc_lookup[] = { 1689, 1669, 1649, 1630, 1611, 1593, 1575,		//prepocty hodnot Lookup
 		1558, 1540, 1524, 1507, 1491, 1475, 1460, 1445, 1430, 1415, 1401, 1387,
 		1373, 1360, 1347, 1334, 1322, 1309, 1297, 1285, 1274, 1263, 1251, 1241,
 		1230, 1220, 1209, 1199, 1190, 1180, 1171, 1161, 1152, 1144, 1135, 1126,
@@ -183,10 +183,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
    sct_init();
    OWInit();
-   HAL_ADC_Start(&hadc);
+   HAL_ADCEx_Calibration_Start(&hadc);  // nastartovani kalibrace
+   HAL_ADC_Start(&hadc);  //nastartovani ADC
    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);  //NTC LED1
    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);  //LED2
-   HAL_ADCEx_Calibration_Start(&hadc);
+
 
   /* USER CODE END 2 */
 
@@ -211,7 +212,7 @@ int main(void)
 */
 	  switch (state) {
 	  		case CON:  //covert
-	  			OWConvertAll();
+	  			OWConvertAll();  //se vaze k 1wire
 	  			delay_conversion = HAL_GetTick();
 	  			state = FIN;
 	  			break;
@@ -234,7 +235,7 @@ int main(void)
 	  			break;
 
 	  		case VAL1:  //get values from DS18B20 and NTC
-	  			OWReadTemperature(&temp_18b20);
+	  			OWReadTemperature(&temp_18b20);  // do promene ...
 	  			ntc_value = ntc_lookup[HAL_ADC_GetValue(&hadc)];
 	  			state = CON;
 	  			break;

@@ -262,7 +262,7 @@ int main(void)
   MX_TIM1_Init();
  8000234:	f000 f86c 	bl	8000310 <MX_TIM1_Init>
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Encoder_Start(&htim1, htim1.Channel);
+  HAL_TIM_Encoder_Start(&htim1, htim1.Channel); // spustim citac v rezimu ncoderu
  8000238:	4b0e      	ldr	r3, [pc, #56]	; (8000274 <main+0x54>)
  800023a:	7f1b      	ldrb	r3, [r3, #28]
  800023c:	001a      	movs	r2, r3

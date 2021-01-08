@@ -1250,27 +1250,27 @@ int main(void)
  8000878:	f000 facc 	bl	8000e14 <sct_init>
    OWInit();
  800087c:	f7ff fdba 	bl	80003f4 <OWInit>
-   HAL_ADC_Start(&hadc);
+   HAL_ADCEx_Calibration_Start(&hadc);  // nastartovani kalibrace
  8000880:	4b66      	ldr	r3, [pc, #408]	; (8000a1c <main+0x1bc>)
  8000882:	0018      	movs	r0, r3
- 8000884:	f000 fdc6 	bl	8001414 <HAL_ADC_Start>
+ 8000884:	f000 ff98 	bl	80017b8 <HAL_ADCEx_Calibration_Start>
+   HAL_ADC_Start(&hadc);  //nastartovani ADC
+ 8000888:	4b64      	ldr	r3, [pc, #400]	; (8000a1c <main+0x1bc>)
+ 800088a:	0018      	movs	r0, r3
+ 800088c:	f000 fdc2 	bl	8001414 <HAL_ADC_Start>
    HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 1);  //NTC LED1
- 8000888:	2390      	movs	r3, #144	; 0x90
- 800088a:	05db      	lsls	r3, r3, #23
- 800088c:	2201      	movs	r2, #1
- 800088e:	2110      	movs	r1, #16
- 8000890:	0018      	movs	r0, r3
- 8000892:	f001 fa70 	bl	8001d76 <HAL_GPIO_WritePin>
+ 8000890:	2390      	movs	r3, #144	; 0x90
+ 8000892:	05db      	lsls	r3, r3, #23
+ 8000894:	2201      	movs	r2, #1
+ 8000896:	2110      	movs	r1, #16
+ 8000898:	0018      	movs	r0, r3
+ 800089a:	f001 fa6c 	bl	8001d76 <HAL_GPIO_WritePin>
    HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, 0);  //LED2
- 8000896:	4b62      	ldr	r3, [pc, #392]	; (8000a20 <main+0x1c0>)
- 8000898:	2200      	movs	r2, #0
- 800089a:	2101      	movs	r1, #1
- 800089c:	0018      	movs	r0, r3
- 800089e:	f001 fa6a 	bl	8001d76 <HAL_GPIO_WritePin>
-   HAL_ADCEx_Calibration_Start(&hadc);
- 80008a2:	4b5e      	ldr	r3, [pc, #376]	; (8000a1c <main+0x1bc>)
+ 800089e:	4b60      	ldr	r3, [pc, #384]	; (8000a20 <main+0x1c0>)
+ 80008a0:	2200      	movs	r2, #0
+ 80008a2:	2101      	movs	r1, #1
  80008a4:	0018      	movs	r0, r3
- 80008a6:	f000 ff87 	bl	80017b8 <HAL_ADCEx_Calibration_Start>
+ 80008a6:	f001 fa66 	bl	8001d76 <HAL_GPIO_WritePin>
 	  sct_value(temp_18b20 / 10);  //display value for only positiv values
 
 	  sct_value(ntc_lookup[HAL_ADC_GetValue(&hadc)]);  // index to tab from hadc and display
@@ -1288,7 +1288,7 @@ int main(void)
  80008ba:	681b      	ldr	r3, [r3, #0]
  80008bc:	469f      	mov	pc, r3
 	  		case CON:  //covert
-	  			OWConvertAll();
+	  			OWConvertAll();  //se vaze k 1wire
  80008be:	f7ff ff5e 	bl	800077e <OWConvertAll>
 	  			delay_conversion = HAL_GetTick();
  80008c2:	f000 fc5d 	bl	8001180 <HAL_GetTick>
@@ -1380,7 +1380,7 @@ int main(void)
  8000950:	e060      	b.n	8000a14 <main+0x1b4>
 
 	  		case VAL1:  //get values from DS18B20 and NTC
-	  			OWReadTemperature(&temp_18b20);
+	  			OWReadTemperature(&temp_18b20);  // do promene ...
  8000952:	4b3a      	ldr	r3, [pc, #232]	; (8000a3c <main+0x1dc>)
  8000954:	0018      	movs	r0, r3
  8000956:	f7ff ff1b 	bl	8000790 <OWReadTemperature>
